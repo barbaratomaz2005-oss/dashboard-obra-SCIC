@@ -14,3 +14,5 @@ const GIDS = {
     canteiroFuncionarios: "788302874",
     rocontec: "1459457304"
 };
+window.SHEET_ID = SHEET_ID;
+window.GIDS = GIDS;
