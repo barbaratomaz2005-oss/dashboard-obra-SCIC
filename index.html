@@ -1,1 +1,938 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
 
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <meta
+        name="description"
+        content="Dashboard de acompanhamento da obra SCIC Building"
+    >
+
+    <title>Dashboard da Obra | SCIC Building</title>
+
+    <!-- Fonte utilizada no dashboard -->
+    <link
+        rel="preconnect"
+        href="https://fonts.googleapis.com"
+    >
+
+    <link
+        rel="preconnect"
+        href="https://fonts.gstatic.com"
+        crossorigin
+    >
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet"
+    >
+
+    <!-- Biblioteca utilizada para criar os gráficos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        :root {
+            --cor-principal: #14324b;
+            --cor-secundaria: #1f5d78;
+            --cor-destaque: #d1a93c;
+            --cor-fundo: #f3f5f7;
+            --cor-card: #ffffff;
+            --cor-texto: #24313d;
+            --cor-texto-claro: #687785;
+            --cor-borda: #dfe5ea;
+            --cor-sucesso: #15803d;
+            --cor-atencao: #b45309;
+            --cor-critico: #b91c1c;
+            --sombra: 0 8px 24px rgba(20, 50, 75, 0.08);
+            --raio: 14px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: "Inter", Arial, sans-serif;
+            background: var(--cor-fundo);
+            color: var(--cor-texto);
+            min-height: 100vh;
+        }
+
+        button,
+        input,
+        select {
+            font-family: inherit;
+        }
+
+        img {
+            display: block;
+            max-width: 100%;
+        }
+
+        .cabecalho {
+            background:
+                linear-gradient(
+                    110deg,
+                    rgba(10, 37, 57, 0.97),
+                    rgba(26, 91, 119, 0.91)
+                );
+            color: #ffffff;
+            padding: 28px 5%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cabecalho::after {
+            content: "";
+            position: absolute;
+            width: 280px;
+            height: 280px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.05);
+            top: -160px;
+            right: 4%;
+        }
+
+        .cabecalho-conteudo {
+            position: relative;
+            z-index: 2;
+            max-width: 1500px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 24px;
+        }
+
+        .cabecalho-titulo h1 {
+            font-size: clamp(1.65rem, 3vw, 2.65rem);
+            font-weight: 800;
+            letter-spacing: -0.04em;
+            margin-bottom: 7px;
+        }
+
+        .cabecalho-titulo p {
+            color: rgba(255, 255, 255, 0.82);
+            font-size: 0.95rem;
+        }
+
+        .cabecalho-informacoes {
+            text-align: right;
+            font-size: 0.88rem;
+            color: rgba(255, 255, 255, 0.86);
+            line-height: 1.7;
+        }
+
+        .navegacao {
+            background: #ffffff;
+            border-bottom: 1px solid var(--cor-borda);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            overflow-x: auto;
+        }
+
+        .navegacao-conteudo {
+            max-width: 1500px;
+            margin: 0 auto;
+            padding: 0 5%;
+            display: flex;
+            min-width: max-content;
+        }
+
+        .navegacao a {
+            display: block;
+            color: var(--cor-texto-claro);
+            text-decoration: none;
+            font-size: 0.86rem;
+            font-weight: 600;
+            padding: 17px 15px;
+            border-bottom: 3px solid transparent;
+            transition: 0.2s ease;
+        }
+
+        .navegacao a:hover {
+            color: var(--cor-principal);
+            border-bottom-color: var(--cor-destaque);
+        }
+
+        .conteudo {
+            max-width: 1500px;
+            margin: 0 auto;
+            padding: 28px 5% 55px;
+        }
+
+        .estado-carregamento {
+            background: #ffffff;
+            border: 1px solid var(--cor-borda);
+            border-radius: var(--raio);
+            padding: 20px;
+            margin-bottom: 22px;
+            text-align: center;
+            box-shadow: var(--sombra);
+        }
+
+        .estado-carregamento.erro {
+            color: var(--cor-critico);
+            border-color: rgba(185, 28, 28, 0.25);
+            background: #fff7f7;
+        }
+
+        .secao {
+            scroll-margin-top: 90px;
+            margin-bottom: 35px;
+        }
+
+        .secao-titulo {
+            margin-bottom: 18px;
+        }
+
+        .secao-titulo h2 {
+            color: var(--cor-principal);
+            font-size: 1.28rem;
+            margin-bottom: 5px;
+        }
+
+        .secao-titulo p {
+            color: var(--cor-texto-claro);
+            font-size: 0.88rem;
+        }
+
+        .grade-indicadores {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 17px;
+        }
+
+        .indicador {
+            background: var(--cor-card);
+            border: 1px solid var(--cor-borda);
+            border-radius: var(--raio);
+            padding: 20px;
+            box-shadow: var(--sombra);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .indicador::before {
+            content: "";
+            width: 4px;
+            height: 100%;
+            background: var(--cor-destaque);
+            position: absolute;
+            left: 0;
+            top: 0;
+        }
+
+        .indicador-label {
+            display: block;
+            color: var(--cor-texto-claro);
+            font-size: 0.77rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-bottom: 11px;
+        }
+
+        .indicador-valor {
+            display: block;
+            color: var(--cor-principal);
+            font-size: 1.75rem;
+            font-weight: 800;
+        }
+
+        .indicador-descricao {
+            display: block;
+            margin-top: 7px;
+            color: var(--cor-texto-claro);
+            font-size: 0.78rem;
+        }
+
+        .grade-dupla {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 20px;
+        }
+
+        .grade-assimetrica {
+            display: grid;
+            grid-template-columns: minmax(0, 1.5fr) minmax(300px, 0.75fr);
+            gap: 20px;
+        }
+
+        .card {
+            background: var(--cor-card);
+            border: 1px solid var(--cor-borda);
+            border-radius: var(--raio);
+            box-shadow: var(--sombra);
+            padding: 20px;
+            overflow: hidden;
+        }
+
+        .card-cabecalho {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+
+        .card-cabecalho h3 {
+            font-size: 1rem;
+            color: var(--cor-principal);
+        }
+
+        .card-cabecalho span {
+            color: var(--cor-texto-claro);
+            font-size: 0.76rem;
+        }
+
+        .grafico-area {
+            position: relative;
+            height: 320px;
+        }
+
+        .tabela-container {
+            overflow-x: auto;
+            border-radius: 10px;
+            border: 1px solid var(--cor-borda);
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            min-width: 640px;
+            background: #ffffff;
+        }
+
+        th {
+            background: #edf2f5;
+            color: var(--cor-principal);
+            font-size: 0.76rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            text-align: left;
+            padding: 13px 12px;
+        }
+
+        td {
+            color: #42505c;
+            font-size: 0.84rem;
+            padding: 13px 12px;
+            border-top: 1px solid var(--cor-borda);
+            vertical-align: middle;
+        }
+
+        tbody tr:hover {
+            background: #f8fafb;
+        }
+
+        .status {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 5px 9px;
+            border-radius: 999px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .status-ok,
+        .status-fechado {
+            background: #dcfce7;
+            color: var(--cor-sucesso);
+        }
+
+        .status-monitorar,
+        .status-andamento,
+        .status-pendente {
+            background: #fef3c7;
+            color: var(--cor-atencao);
+        }
+
+        .status-critico {
+            background: #fee2e2;
+            color: var(--cor-critico);
+        }
+
+        .status-nao-iniciado {
+            background: #e7edf2;
+            color: #536371;
+        }
+
+        .galeria {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 16px;
+        }
+
+        .foto-card {
+            border: 1px solid var(--cor-borda);
+            border-radius: 12px;
+            background: #ffffff;
+            overflow: hidden;
+            box-shadow: var(--sombra);
+        }
+
+        .foto-card-imagem {
+            height: 190px;
+            background: #e9eef2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--cor-texto-claro);
+            font-size: 0.79rem;
+            text-align: center;
+        }
+
+        .foto-card-imagem img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .foto-card-conteudo {
+            padding: 13px;
+        }
+
+        .foto-card-conteudo h4 {
+            font-size: 0.85rem;
+            line-height: 1.4;
+            color: var(--cor-principal);
+        }
+
+        .resumo-equipe {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+            background: linear-gradient(120deg, #17364f, #246681);
+            color: #ffffff;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+
+        .resumo-equipe strong {
+            font-size: 2.3rem;
+        }
+
+        .resumo-equipe span {
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .lista-simples {
+            list-style: none;
+        }
+
+        .lista-simples li {
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+            padding: 11px 0;
+            border-bottom: 1px solid var(--cor-borda);
+            font-size: 0.82rem;
+        }
+
+        .lista-simples li:last-child {
+            border-bottom: 0;
+        }
+
+        .lista-simples strong {
+            color: var(--cor-principal);
+        }
+
+        .rodape {
+            color: var(--cor-texto-claro);
+            text-align: center;
+            font-size: 0.76rem;
+            padding: 25px 5%;
+            border-top: 1px solid var(--cor-borda);
+            background: #ffffff;
+        }
+
+        .vazio {
+            color: var(--cor-texto-claro);
+            font-size: 0.82rem;
+            padding: 25px;
+            text-align: center;
+        }
+
+        @media (max-width: 1100px) {
+            .grade-indicadores {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .galeria {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .grade-assimetrica {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 760px) {
+            .cabecalho-conteudo {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .cabecalho-informacoes {
+                text-align: left;
+            }
+
+            .conteudo {
+                padding-left: 17px;
+                padding-right: 17px;
+            }
+
+            .grade-indicadores,
+            .grade-dupla,
+            .galeria {
+                grid-template-columns: 1fr;
+            }
+
+            .grafico-area {
+                height: 280px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header class="cabecalho">
+        <div class="cabecalho-conteudo">
+
+            <div class="cabecalho-titulo">
+                <h1 id="nomeProjeto">Dashboard da Obra</h1>
+                <p>Acompanhamento executivo, físico e financeiro</p>
+            </div>
+
+            <div class="cabecalho-informacoes">
+                <div>
+                    Atualização:
+                    <strong id="dataAtualizacao">Carregando...</strong>
+                </div>
+
+                <div>
+                    Responsável:
+                    <strong id="responsavelProjeto">Carregando...</strong>
+                </div>
+            </div>
+
+        </div>
+    </header>
+
+    <nav class="navegacao">
+        <div class="navegacao-conteudo">
+            <a href="#visao-geral">Visão geral</a>
+            <a href="#avanco-fisico">Avanço físico</a>
+            <a href="#financeiro">Financeiro</a>
+            <a href="#curva-s">Curva S</a>
+            <a href="#atividades">Atividades</a>
+            <a href="#contratacoes">Contratações</a>
+            <a href="#concessionarias">Concessionárias</a>
+            <a href="#canteiro">Canteiro</a>
+            <a href="#rocontec">Rocontec</a>
+        </div>
+    </nav>
+
+    <main class="conteudo">
+
+        <div
+            id="mensagemSistema"
+            class="estado-carregamento"
+        >
+            Carregando os dados da planilha...
+        </div>
+
+        <section
+            id="visao-geral"
+            class="secao"
+        >
+            <div class="secao-titulo">
+                <h2>Visão geral</h2>
+                <p>Principais indicadores de acompanhamento da obra.</p>
+            </div>
+
+            <div class="grade-indicadores">
+
+                <article class="indicador">
+                    <span class="indicador-label">
+                        Índice de desempenho
+                    </span>
+
+                    <strong
+                        class="indicador-valor"
+                        id="indicadorIDP"
+                    >
+                        —
+                    </strong>
+
+                    <span class="indicador-descricao">
+                        Valor registrado na aba Config
+                    </span>
+                </article>
+
+                <article class="indicador">
+                    <span class="indicador-label">
+                        Pessoas no canteiro
+                    </span>
+
+                    <strong
+                        class="indicador-valor"
+                        id="indicadorFuncionarios"
+                    >
+                        —
+                    </strong>
+
+                    <span class="indicador-descricao">
+                        Total informado por empresa
+                    </span>
+                </article>
+
+                <article class="indicador">
+                    <span class="indicador-label">
+                        Contratações fechadas
+                    </span>
+
+                    <strong
+                        class="indicador-valor"
+                        id="indicadorContratacoes"
+                    >
+                        —
+                    </strong>
+
+                    <span class="indicador-descricao">
+                        Etapas concluídas no processo
+                    </span>
+                </article>
+
+                <article class="indicador">
+                    <span class="indicador-label">
+                        Pontos críticos
+                    </span>
+
+                    <strong
+                        class="indicador-valor"
+                        id="indicadorCriticos"
+                    >
+                        —
+                    </strong>
+
+                    <span class="indicador-descricao">
+                        Itens classificados como críticos
+                    </span>
+                </article>
+
+            </div>
+        </section>
+
+        <section
+            id="avanco-fisico"
+            class="secao"
+        >
+            <div class="secao-titulo">
+                <h2>Avanço físico</h2>
+                <p>Comparação entre o avanço previsto e o realizado.</p>
+            </div>
+
+            <div class="grade-dupla">
+
+                <article class="card">
+                    <div class="card-cabecalho">
+                        <h3>Avanço físico semanal</h3>
+                        <span>Previsto × Realizado</span>
+                    </div>
+
+                    <div class="grafico-area">
+                        <canvas id="graficoAvancoSemanal"></canvas>
+                    </div>
+                </article>
+
+                <article class="card">
+                    <div class="card-cabecalho">
+                        <h3>Avanço físico acumulado</h3>
+                        <span>Previsto × Realizado</span>
+                    </div>
+
+                    <div class="grafico-area">
+                        <canvas id="graficoAvancoAcumulado"></canvas>
+                    </div>
+                </article>
+
+            </div>
+        </section>
+
+        <section
+            id="financeiro"
+            class="secao"
+        >
+            <div class="secao-titulo">
+                <h2>Fluxo financeiro</h2>
+                <p>Acompanhamento dos valores solicitados e aprovados.</p>
+            </div>
+
+            <div class="grade-dupla">
+
+                <article class="card">
+                    <div class="card-cabecalho">
+                        <h3>Fluxo semanal</h3>
+                        <span>Pedido × Aprovado</span>
+                    </div>
+
+                    <div class="grafico-area">
+                        <canvas id="graficoFinanceiroSemanal"></canvas>
+                    </div>
+                </article>
+
+                <article class="card">
+                    <div class="card-cabecalho">
+                        <h3>Fluxo trimestral</h3>
+                        <span>Previsto × Realizado</span>
+                    </div>
+
+                    <div class="grafico-area">
+                        <canvas id="graficoFinanceiroTrimestral"></canvas>
+                    </div>
+                </article>
+
+            </div>
+        </section>
+
+        <section
+            id="curva-s"
+            class="secao"
+        >
+            <div class="secao-titulo">
+                <h2>Curva S</h2>
+                <p>Evolução física e financeira do empreendimento.</p>
+            </div>
+
+            <article class="card">
+                <div class="card-cabecalho">
+                    <h3>Curva de evolução</h3>
+                    <span>Indicadores físicos e financeiros</span>
+                </div>
+
+                <div class="grafico-area">
+                    <canvas id="graficoCurvaS"></canvas>
+                </div>
+            </article>
+        </section>
+
+        <section
+            id="atividades"
+            class="secao"
+        >
+            <div class="secao-titulo">
+                <h2>Atividades semanais</h2>
+                <p>Registros fotográficos e principais pontos da semana.</p>
+            </div>
+
+            <article class="card">
+                <div class="card-cabecalho">
+                    <h3>Registros fotográficos</h3>
+                    <span>Imagens informadas na planilha</span>
+                </div>
+
+                <div
+                    id="galeriaFotos"
+                    class="galeria"
+                >
+                    <div class="vazio">Carregando fotografias...</div>
+                </div>
+            </article>
+
+            <br>
+
+            <article class="card">
+                <div class="card-cabecalho">
+                    <h3>Pontos de atenção</h3>
+                    <span>Acompanhamento semanal</span>
+                </div>
+
+                <div class="tabela-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Item</th>
+                                <th>Descrição</th>
+                                <th>Responsável</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="tabelaPontos">
+                            <tr>
+                                <td colspan="4">Carregando dados...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </article>
+        </section>
+
+        <section
+            id="contratacoes"
+            class="secao"
+        >
+            <div class="secao-titulo">
+                <h2>Contratações</h2>
+                <p>Status das contratações da obra.</p>
+            </div>
+
+            <article class="card">
+                <div class="tabela-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Atividade</th>
+                                <th>Obra</th>
+                                <th>Suprimentos</th>
+                                <th>Gerenciadora</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="tabelaContratacoes">
+                            <tr>
+                                <td colspan="4">Carregando dados...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </article>
+        </section>
+
+        <section
+            id="concessionarias"
+            class="secao"
+        >
+            <div class="secao-titulo">
+                <h2>Concessionárias</h2>
+                <p>Acompanhamento das etapas junto às concessionárias.</p>
+            </div>
+
+            <article class="card">
+                <div class="tabela-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Nº</th>
+                                <th>Etapa</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="tabelaConcessionarias">
+                            <tr>
+                                <td colspan="3">Carregando dados...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </article>
+        </section>
+
+        <section
+            id="canteiro"
+            class="secao"
+        >
+            <div class="secao-titulo">
+                <h2>Canteiro de obras</h2>
+                <p>Distribuição de funcionários por empresa.</p>
+            </div>
+
+            <div class="grade-assimetrica">
+
+                <article class="card">
+                    <div class="card-cabecalho">
+                        <h3>Funcionários por empresa</h3>
+                        <span>Efetivo informado</span>
+                    </div>
+
+                    <div class="grafico-area">
+                        <canvas id="graficoFuncionarios"></canvas>
+                    </div>
+                </article>
+
+                <article class="card">
+                    <div class="resumo-equipe">
+                        <div>
+                            <span>Total no canteiro</span>
+                            <br>
+                            <strong id="totalFuncionarios">—</strong>
+                        </div>
+
+                        <span>Pessoas</span>
+                    </div>
+
+                    <ul
+                        id="listaFuncionarios"
+                        class="lista-simples"
+                    >
+                        <li>Carregando dados...</li>
+                    </ul>
+                </article>
+
+            </div>
+        </section>
+
+        <section
+            id="rocontec"
+            class="secao"
+        >
+            <div class="secao-titulo">
+                <h2>Rocontec</h2>
+                <p>Acompanhamento mensal da taxa administrativa e folha.</p>
+            </div>
+
+            <article class="card">
+                <div class="tabela-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Mês</th>
+                                <th>Taxa administrativa</th>
+                                <th>Folha</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="tabelaRocontec">
+                            <tr>
+                                <td colspan="3">Carregando dados...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </article>
+        </section>
+
+    </main>
+
+    <footer class="rodape">
+        Dashboard de acompanhamento da obra • Dados provenientes do Google Sheets
+    </footer>
+
+    <!-- A ordem destes arquivos é importante -->
+    <script src="config.js"></script>
+    <script src="sheets.js"></script>
+    <script src="script.js"></script>
+
+</body>
+</html>
