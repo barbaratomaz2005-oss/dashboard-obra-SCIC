@@ -1,6 +1,6 @@
-const SHEET_ID = "15elqBXpHgUMZu9GCxOuQzeHfYvb7Zsv0QVWl0FfgRwc";
+window.SHEET_ID = "15elqBXpHgUMZu9GCxOuQzeHfYvb7Zsv0QVWl0FfgRwc";
 
-const GIDS = {
+window.GIDS = {
     config: "295667101",
     avancoFisicoSemanal: "873446954",
     avancoFisicoAcumulado: "1809824478",
@@ -14,5 +14,3 @@ const GIDS = {
     canteiroFuncionarios: "788302874",
     rocontec: "1459457304"
 };
-window.SHEET_ID = SHEET_ID;
-window.GIDS = GIDS;
